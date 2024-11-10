@@ -4,8 +4,8 @@
 #include <WiFi.h>
 #include <Wire.h>
 
-#define WIFI_SSID "wifi_name"  // wi-fi network name
-#define WIFI_PASSWORD "123456" // password
+#define WIFI_SSID "wifi_network_name"
+#define WIFI_PASSWORD "assword"
 
 // Timer variables
 unsigned long lastGyroTime = 0;
@@ -22,15 +22,9 @@ float gyroX = 0, gyroY = 0, gyroZ = 0;
 float accX = 0, accY = 0, accZ = 0;
 float temperature = 0;
 
-// To get the sensor offset,
-//     go to File > Examples > Adafruit MPU6050 >
-//         basic_readings.With the sensor in a static position,
-//     check the gyroscope X, Y, and Z values.Then,
-//     add those values to the gyroXerror,
-//     gyroYerror and gyroZerror variables.
-//     // Gyroscope sensor offset on all axis
-    float gyroXerror = 0.07;
-float gyroYerror = 0.03;
+// Gyroscope sensor offset
+float gyroXerror = 0.01;
+float gyroYerror = 0.02;
 float gyroZerror = 0.01;
 
 void MPU_initialize() {
@@ -55,7 +49,7 @@ void MPU_initialize() {
 
   delay(100);
 }
-
+// чтение данных
 void getGyroReadings() {
   mpu.getEvent(&a, &g, &temp);
 
@@ -86,45 +80,43 @@ void getTemperature() {
   mpu.getEvent(&a, &g, &temp);
   temperature = temp.temperature;
 }
-
+//отправляем данные serial port
 void sendDataSerial() {
-  if (mpu.getMotionInterruptStatus()) {
-    mpu.getEvent(&a, &g, &temp);
+  mpu.getEvent(&a, &g, &temp);
 
-    Serial.print("AccelX:");
-    Serial.print(a.acceleration.x);
-    Serial.print(",");
-    Serial.print("AccelY:");
-    Serial.print(a.acceleration.y);
-    Serial.print(",");
-    Serial.print("AccelZ:");
-    Serial.print(a.acceleration.z);
-    Serial.print(", ");
-    Serial.print("GyroX:");
-    Serial.print(g.gyro.x);
-    Serial.print(",");
-    Serial.print("GyroY:");
-    Serial.print(g.gyro.y);
-    Serial.print(",");
-    Serial.print("GyroZ:");
-    Serial.print(g.gyro.z);
-    Serial.print(", ");
-    Serial.print("Temperature:");
-    Serial.print(temp.temperature);
-  }
+  // Serial.print("AccelX:");
+  Serial.print(a.acceleration.x);
+  Serial.print(",");
+  // Serial.print("AccelY:");
+  Serial.print(a.acceleration.y);
+  Serial.print(",");
+  // Serial.print("AccelZ:");
+  Serial.print(a.acceleration.z);
+  Serial.print(",");
+  // Serial.print("GyroX:");
+  Serial.print(g.gyro.x);
+  Serial.print(",");
+  // Serial.print("GyroY:");
+  Serial.print(g.gyro.y);
+  Serial.print(",");
+  // Serial.print("GyroZ:");
+  Serial.print(g.gyro.z);
+  Serial.print(",");
+  // Serial.print("Temperature:");
+  Serial.println(temp.temperature);
 }
 
 void setup() {
   Serial.begin(115200);
   pinMode(LED_BUILTIN, OUTPUT);
 
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  delay(1000);
+  Serial.println("Starting");
   // Initialize I2C
   Wire.begin();
 
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-
   MPU_initialize();
-  Serial.println("Starting");
 }
 
 bool isConnected = false;
@@ -136,7 +128,7 @@ void loop() {
     isConnected = true;
   }
   if (WiFi.status() != WL_CONNECTED) {
-    Serial.println(".");
+    Serial.println("no connected");
     digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
     delay(1000);
     isConnected = false;
@@ -160,4 +152,5 @@ void loop() {
   }
 
   sendDataSerial();
+  delay(1000);
 }
